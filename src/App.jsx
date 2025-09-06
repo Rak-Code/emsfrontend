@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import { store } from './store';
+import store from './store/index';
 import { initializeAuth } from './store/authSlice';
 
 // Layout Components
