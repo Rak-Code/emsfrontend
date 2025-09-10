@@ -1,163 +1,182 @@
-import React, { useEffect } from 'react';
+// src/App.jsx
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Provider, useDispatch, useSelector } from 'react-redux';
-import store from './store/index';
-import { initializeAuth } from './store/authSlice';
+import { useState, useEffect } from 'react';
+
+// Auth Components
+import Login from './components/auth/Login';
+import Register from './components/auth/Register';
 
 // Layout Components
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
+import AdminLayout from './components/layouts/AdminLayout';
+import ManagerLayout from './components/layouts/ManagerLayout';
+import EmployeeLayout from './components/layouts/EmployeeLayout';
 
-// Auth Pages
-import Login from './pages/Login';
-import Register from './pages/Register';
+// Dashboard Components
+import AdminDashboard from './pages/admin/Dashboard';
+import ManagerDashboard from './pages/manager/Dashboard';
+import EmployeeDashboard from './pages/employee/Dashboard';
 
-// Protected Pages
-import Dashboard from './pages/Dashboard';
-import Employees from './pages/Employees';
-import EmployeeForm from './pages/EmployeeForm';
-import EmployeeDetails from './pages/EmployeeDetails';
+// Admin Pages
+import DepartmentManagement from './pages/admin/DepartmentManagement';
+import RoleManagement from './pages/admin/RoleManagement';
+import LeaveTypeManagement from './pages/admin/LeaveTypeManagement';
+import EmployeeManagement from './pages/admin/EmployeeManagement';
+import SalaryManagement from './pages/admin/SalaryManagement';
+import EmailNotifications from './pages/admin/EmailNotifications';
 
-// CSS
-import './App.css';
+// Manager Pages
+import TeamAttendance from './pages/manager/TeamAttendance';
+import LeaveApprovals from './pages/manager/LeaveApprovals';
+import TeamManagement from './pages/manager/TeamManagement';
 
-const AppContent = () => {
-  const dispatch = useDispatch();
-  const { isAuthenticated } = useSelector((state) => state.auth);
+// Employee Pages
+import MyAttendance from './pages/employee/MyAttendance';
+import LeaveRequests from './pages/employee/LeaveRequests';
+import Profile from './pages/employee/Profile';
+
+// Services
+import { authService } from './services/authService';
+
+// Protected Route Component
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+  const isAuthenticated = authService.isAuthenticated();
+  const userRole = authService.getUserRole();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  return children;
+};
+
+// Unauthorized Component
+const Unauthorized = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="text-center">
+      <h1 className="text-6xl font-bold text-gray-900">403</h1>
+      <p className="text-xl text-gray-600 mt-4">Unauthorized Access</p>
+      <p className="text-gray-500 mt-2">You don't have permission to access this page.</p>
+    </div>
+  </div>
+);
+
+// Loading Component
+const Loading = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+  </div>
+);
+
+function App() {
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize auth state from localStorage
-    dispatch(initializeAuth());
-  }, [dispatch]);
+    // Simulate initial loading check
+    setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route 
-          path="/login" 
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />} 
-        />
-        <Route 
-          path="/register" 
-          element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <Register />} 
-        />
-        
-        {/* Protected Routes */}
-        <Route 
-          path="/" 
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          {/* Dashboard */}
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          
-          {/* Employee Management */}
-          <Route path="employees" element={<Employees />} />
-          <Route 
-            path="employees/new" 
-            element={
-              <ProtectedRoute requiredRole="MANAGER">
-                <EmployeeForm />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="employees/edit/:id" 
-            element={
-              <ProtectedRoute requiredRole="MANAGER">
-                <EmployeeForm />
-              </ProtectedRoute>
-            } 
-          />
-          <Route path="employees/:id" element={<EmployeeDetails />} />
-          
-          {/* Placeholder routes for future features */}
-          <Route 
-            path="attendance" 
-            element={
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Attendance Management</h2>
-                <p className="text-gray-600">This feature will be implemented in the next phase.</p>
-              </div>
-            } 
-          />
-          <Route 
-            path="leave-requests" 
-            element={
-              <div className="text-center py-12">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Leave Requests</h2>
-                <p className="text-gray-600">This feature will be implemented in the next phase.</p>
-              </div>
-            } 
-          />
-          <Route 
-            path="departments" 
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Department Management</h2>
-                  <p className="text-gray-600">This feature will be implemented in the next phase.</p>
-                </div>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="roles" 
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Role Management</h2>
-                  <p className="text-gray-600">This feature will be implemented in the next phase.</p>
-                </div>
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="salary" 
-            element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <div className="text-center py-12">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-4">Salary Management</h2>
-                  <p className="text-gray-600">This feature will be implemented in the next phase.</p>
-                </div>
-              </ProtectedRoute>
-            } 
-          />
-        </Route>
-        
-        {/* Catch all route */}
-        <Route 
-          path="*" 
-          element={
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-                <p className="text-gray-600 mb-8">Page not found</p>
-                <a 
-                  href="/dashboard" 
-                  className="text-primary-600 hover:text-primary-700 font-medium"
-                >
-                  Go to Dashboard
-                </a>
-              </div>
-            </div>
-          } 
-        />
-      </Routes>
-    </Router>
-  );
-};
+      <div className="App">
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
 
-function App() {
-  return (
-    <Provider store={store}>
-      <AppContent />
-    </Provider>
+          {/* Admin Routes */}
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute allowedRoles={['ADMIN']}>
+                <AdminLayout>
+                  <Routes>
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="departments" element={<DepartmentManagement />} />
+                    <Route path="roles" element={<RoleManagement />} />
+                    <Route path="leave-types" element={<LeaveTypeManagement />} />
+                    <Route path="employees" element={<EmployeeManagement />} />
+                    <Route path="salaries" element={<SalaryManagement />} />
+                    <Route path="notifications" element={<EmailNotifications />} />
+                    <Route path="" element={<Navigate to="dashboard" replace />} />
+                  </Routes>
+                </AdminLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Manager Routes */}
+          <Route
+            path="/manager/*"
+            element={
+              <ProtectedRoute allowedRoles={['MANAGER', 'ADMIN']}>
+                <ManagerLayout>
+                  <Routes>
+                    <Route path="dashboard" element={<ManagerDashboard />} />
+                    <Route path="team-attendance" element={<TeamAttendance />} />
+                    <Route path="leave-approvals" element={<LeaveApprovals />} />
+                    <Route path="team-management" element={<TeamManagement />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="" element={<Navigate to="dashboard" replace />} />
+                  </Routes>
+                </ManagerLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Employee Routes */}
+          <Route
+            path="/employee/*"
+            element={
+              <ProtectedRoute allowedRoles={['EMPLOYEE', 'MANAGER', 'ADMIN']}>
+                <EmployeeLayout>
+                  <Routes>
+                    <Route path="dashboard" element={<EmployeeDashboard />} />
+                    <Route path="attendance" element={<MyAttendance />} />
+                    <Route path="leave-requests" element={<LeaveRequests />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="" element={<Navigate to="dashboard" replace />} />
+                  </Routes>
+                </EmployeeLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Default Route - Redirect based on role */}
+          <Route
+            path="/"
+            element={
+              <Navigate
+                to={
+                  authService.isAuthenticated()
+                    ? authService.isAdmin()
+                      ? '/admin/dashboard'
+                      : authService.isManager()
+                      ? '/manager/dashboard'
+                      : '/employee/dashboard'
+                    : '/login'
+                }
+                replace
+              />
+            }
+          />
+
+          {/* Catch-all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
